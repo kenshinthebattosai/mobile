@@ -77,6 +77,9 @@
     <string name="CurrentTimeEntryEditDeleteToast">Time entry has been discarded</string>
     <string name="MainDrawerTimer">Timer</string>
     <string name="MainDrawerReports">Reports</string>
+    <string name="MainDrawerReportsWeek">Week</string>
+    <string name="MainDrawerReportsMonth">Month</string>
+    <string name="MainDrawerReportsYear">Year</string>
     <string name="MainDrawerFeedback">Feedback</string>
     <string name="MainDrawerSettings">Settings</string>
     <string name="MainDrawerLogout">Log out</string>

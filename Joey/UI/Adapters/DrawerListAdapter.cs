@@ -16,6 +16,9 @@ namespace Toggl.Joey.UI.Adapters
         protected static readonly int ViewTypeDrawerItem = 1;
         public static readonly int TimerPageId = 0;
         public static readonly int ReportsPageId = 1;
+        public static readonly int ReportsWeekPageId = 5;
+        public static readonly int ReportsMonthPageId = 6;
+        public static readonly int ReportsYearPageId = 7;
         public static readonly int SettingsPageId = 2;
         public static readonly int LogoutPageId = 3;
         public static readonly int FeedbackPageId = 4;
@@ -34,6 +37,27 @@ namespace Toggl.Joey.UI.Adapters
                 new DrawerItem () {
                     Id = ReportsPageId,
                     TextResId = Resource.String.MainDrawerReports,
+                    ImageResId = Resource.Drawable.IcNavReports,
+                    IsEnabled = true,
+                },
+                new DrawerItem () {
+                    Id = ReportsWeekPageId,
+                    ChildOf = ReportsPageId,
+                    TextResId = Resource.String.MainDrawerReportsWeek,
+                    ImageResId = Resource.Drawable.IcNavReports,
+                    IsEnabled = true,
+                },
+                new DrawerItem () {
+                    Id = ReportsMonthPageId,
+                    ChildOf = ReportsPageId,
+                    TextResId = Resource.String.MainDrawerReportsMonth,
+                    ImageResId = Resource.Drawable.IcNavReports,
+                    IsEnabled = true,
+                },
+                new DrawerItem () {
+                    Id = ReportsYearPageId,
+                    ChildOf = ReportsPageId,
+                    TextResId = Resource.String.MainDrawerReportsYear,
                     ImageResId = Resource.Drawable.IcNavReports,
                     IsEnabled = true,
                 },
@@ -144,7 +168,9 @@ namespace Toggl.Joey.UI.Adapters
             public int Id;
             public int TextResId;
             public int ImageResId;
+            public int ChildOf = 0; // first level element
             public bool IsEnabled;
+            public bool Expanded = false; // If true, child views will be displayed under it, ordered by id's
         }
 
         private class HeaderViewHolder : ModelViewHolder<UserModel>
