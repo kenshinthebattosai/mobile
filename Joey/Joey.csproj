@@ -549,6 +549,7 @@
     <AndroidResource Include="Resources\drawable-mdpi\IcKeyLeft.png" />
     <AndroidResource Include="Resources\drawable-mdpi\IcKeyRight.png" />
     <AndroidResource Include="Resources\layout\ReportsPagerFragment.axml" />
+    <AndroidResource Include="Resources\layout\MainDrawerSubListItem.axml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <Import Project="../packages/XamGuard.1.0.1/Proguard.targets" Condition="'$(Configuration)' != 'Debug'" />

@@ -14,6 +14,7 @@ namespace Toggl.Joey.UI.Adapters
     {
         protected static readonly int ViewTypeDrawerHeader = 0;
         protected static readonly int ViewTypeDrawerItem = 1;
+        protected static readonly int ViewTypeDrawerSubItem = 2;
         public static readonly int TimerPageId = 0;
         public static readonly int ReportsPageId = 1;
         public static readonly int ReportsWeekPageId = 5;
@@ -22,7 +23,8 @@ namespace Toggl.Joey.UI.Adapters
         public static readonly int SettingsPageId = 2;
         public static readonly int LogoutPageId = 3;
         public static readonly int FeedbackPageId = 4;
-        private readonly List<DrawerItem> rowItems;
+        private List<DrawerItem> rowItems;
+        private readonly List<DrawerItem> collapsedRowItems;
         private readonly AuthManager authManager;
 
         public DrawerListAdapter ()
@@ -39,27 +41,29 @@ namespace Toggl.Joey.UI.Adapters
                     TextResId = Resource.String.MainDrawerReports,
                     ImageResId = Resource.Drawable.IcNavReports,
                     IsEnabled = true,
-                },
-                new DrawerItem () {
-                    Id = ReportsWeekPageId,
-                    ChildOf = ReportsPageId,
-                    TextResId = Resource.String.MainDrawerReportsWeek,
-                    ImageResId = Resource.Drawable.IcNavReports,
-                    IsEnabled = true,
-                },
-                new DrawerItem () {
-                    Id = ReportsMonthPageId,
-                    ChildOf = ReportsPageId,
-                    TextResId = Resource.String.MainDrawerReportsMonth,
-                    ImageResId = Resource.Drawable.IcNavReports,
-                    IsEnabled = true,
-                },
-                new DrawerItem () {
-                    Id = ReportsYearPageId,
-                    ChildOf = ReportsPageId,
-                    TextResId = Resource.String.MainDrawerReportsYear,
-                    ImageResId = Resource.Drawable.IcNavReports,
-                    IsEnabled = true,
+                    SubItems = new List<DrawerItem> () {
+                        new DrawerItem () {
+                            Id = ReportsWeekPageId,
+                            ChildOf = ReportsPageId,
+                            TextResId = Resource.String.MainDrawerReportsWeek,
+                            ImageResId = 0,
+                            IsEnabled = true,
+                        },
+                        new DrawerItem () {
+                            Id = ReportsMonthPageId,
+                            ChildOf = ReportsPageId,
+                            TextResId = Resource.String.MainDrawerReportsMonth,
+                            ImageResId = 0,
+                            IsEnabled = true,
+                        },
+                        new DrawerItem () {
+                            Id = ReportsYearPageId,
+                            ChildOf = ReportsPageId,
+                            TextResId = Resource.String.MainDrawerReportsYear,
+                            ImageResId = 0,
+                            IsEnabled = true,
+                        }
+                    }
                 },
                 new DrawerItem () {
                     Id = SettingsPageId,
@@ -80,18 +84,21 @@ namespace Toggl.Joey.UI.Adapters
                     IsEnabled = true,
                 }
             };
+            collapsedRowItems = rowItems;
             authManager = ServiceContainer.Resolve<AuthManager> ();
         }
 
         public override int ViewTypeCount
         {
-            get { return 2; }
+            get { return 3; }
         }
 
         public override int GetItemViewType (int position)
         {
             if (position == 0) {
                 return ViewTypeDrawerHeader;
+            } else if (rowItems [position - 1].ChildOf > 0) {
+                return ViewTypeDrawerSubItem;
             } else {
                 return ViewTypeDrawerItem;
             }
@@ -110,7 +117,18 @@ namespace Toggl.Joey.UI.Adapters
 
                 var holder = (HeaderViewHolder)view.Tag;
                 holder.Bind ((UserModel)authManager.User);
+            } else if (GetItemViewType (position) == ViewTypeDrawerSubItem) {
+
+                if (view == null) {
+                    view = LayoutInflater.FromContext (parent.Context).Inflate (
+                                Resource.Layout.MainDrawerSubListItem, parent, false);
+                    view.Tag = new DrawerSubItemViewHolder (view);
+                }
+
+                var holder = (DrawerSubItemViewHolder)view.Tag;
+                holder.Bind (GetDrawerItem (position));
             } else {
+
                 if (view == null) {
                     view = LayoutInflater.FromContext (parent.Context).Inflate (
                                Resource.Layout.MainDrawerListItem, parent, false);
@@ -157,6 +175,28 @@ namespace Toggl.Joey.UI.Adapters
             }
         }
 
+        public void ExpandCollapse (int position)
+        {
+            rowItems = collapsedRowItems;
+            if (rowItems [position].SubItems == null) {
+                return;
+            }
+            if (rowItems [position].SubItems.Count > 0) {
+                var newList = new List<DrawerItem> ();
+                int pos = 0;
+                foreach (var row in rowItems) {
+                    newList.Add (row);
+                    if (pos == position) {
+                        foreach (var sub in rowItems[position].SubItems) {
+                            newList.Add (sub);
+                        }
+                    }
+                    pos++;
+                }
+                rowItems = newList;
+            }
+        }
+
         public override bool IsEnabled (int position)
         {
             var item = GetDrawerItem (position);
@@ -168,9 +208,10 @@ namespace Toggl.Joey.UI.Adapters
             public int Id;
             public int TextResId;
             public int ImageResId;
-            public int ChildOf = 0; // first level element
+            public int ChildOf = 0;
             public bool IsEnabled;
-            public bool Expanded = false; // If true, child views will be displayed under it, ordered by id's
+            public bool Expanded = false;
+            public List<DrawerItem> SubItems;
         }
 
         private class HeaderViewHolder : ModelViewHolder<UserModel>
@@ -240,7 +281,27 @@ namespace Toggl.Joey.UI.Adapters
                 if (DataSource == null) {
                     return;
                 }
+
                 IconImageView.SetImageResource (DataSource.ImageResId);
+                TitleTextView.SetText (DataSource.TextResId);
+                TitleTextView.Enabled = DataSource.IsEnabled;
+            }
+        }
+
+        private class DrawerSubItemViewHolder : BindableViewHolder<DrawerItem>
+        {
+            public TextView TitleTextView { get; private set; }
+
+            public DrawerSubItemViewHolder (View root) : base (root)
+            {
+                TitleTextView = root.FindViewById<TextView> (Resource.Id.TitleTextView).SetFont (Font.Roboto);
+            }
+
+            protected override void Rebind ()
+            {
+                if (DataSource == null) {
+                    return;
+                }
                 TitleTextView.SetText (DataSource.TextResId);
                 TitleTextView.Enabled = DataSource.IsEnabled;
             }

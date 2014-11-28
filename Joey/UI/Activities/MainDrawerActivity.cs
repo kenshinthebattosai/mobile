@@ -14,18 +14,19 @@ using Toggl.Joey.UI.Adapters;
 using Toggl.Joey.UI.Components;
 using Toggl.Joey.UI.Fragments;
 using Fragment = Android.Support.V4.App.Fragment;
+using Toggl.Phoebe.Data;
 
 namespace Toggl.Joey.UI.Activities
 {
     [Activity (
-         Label = "@string/EntryName",
-         Exported = true,
+        Label = "@string/EntryName",
+        Exported = true,
          #if DEBUG
          // The actual entry-point is defined in manifest via activity-alias, this here is just to
          // make adb launch the activity automatically when developing.
-         MainLauncher = true,
+        MainLauncher = true,
          #endif
-         Theme = "@style/Theme.Toggl.App")]
+        Theme = "@style/Theme.Toggl.App")]
     public class MainDrawerActivity : BaseActivity
     {
         private const string PageStackExtra = "com.toggl.timer.page_stack";
@@ -194,15 +195,34 @@ namespace Toggl.Joey.UI.Activities
             if (id == DrawerListAdapter.SettingsPageId) {
                 DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.SettingsPageId), true);
                 OpenFragment (settingsFragment.Value);
+                drawerAdapter.ExpandCollapse (DrawerListAdapter.SettingsPageId);
             } else if (id == DrawerListAdapter.ReportsPageId) {
                 DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.ReportsPageId), true);
+                drawerAdapter.ExpandCollapse (DrawerListAdapter.ReportsPageId);
                 OpenFragment (reportFragment.Value);
+            } else if (id == DrawerListAdapter.ReportsWeekPageId) {
+                DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.ReportsWeekPageId), true);
+                drawerAdapter.ExpandCollapse (DrawerListAdapter.ReportsPageId);
+                reportFragment.Value.ZoomPeriod = ZoomLevel.Week;
+
+            } else if (id == DrawerListAdapter.ReportsMonthPageId) {
+                DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.ReportsMonthPageId), true);
+                drawerAdapter.ExpandCollapse (DrawerListAdapter.ReportsPageId);
+                reportFragment.Value.ZoomPeriod = ZoomLevel.Month;
+
+            } else if (id == DrawerListAdapter.ReportsYearPageId) {
+                DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.ReportsYearPageId), true);
+                drawerAdapter.ExpandCollapse (DrawerListAdapter.ReportsPageId);
+                reportFragment.Value.ZoomPeriod = ZoomLevel.Year;
+
             } else if (id == DrawerListAdapter.FeedbackPageId) {
                 DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.FeedbackPageId), true);
+                drawerAdapter.ExpandCollapse (DrawerListAdapter.FeedbackPageId);
                 OpenFragment (feedbackFragment.Value);
             } else {
                 DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.TimerPageId), true);
                 OpenFragment (trackingFragment.Value);
+                drawerAdapter.ExpandCollapse (DrawerListAdapter.TimerPageId);
             }
 
             pageStack.Remove (id);
@@ -241,7 +261,12 @@ namespace Toggl.Joey.UI.Activities
                 StartAuthActivity ();
             } else if (e.Id == DrawerListAdapter.ReportsPageId) {
                 OpenPage (DrawerListAdapter.ReportsPageId);
-
+            } else if (e.Id == DrawerListAdapter.ReportsWeekPageId) {
+                OpenPage (DrawerListAdapter.ReportsWeekPageId);
+            } else if (e.Id == DrawerListAdapter.ReportsMonthPageId) {
+                OpenPage (DrawerListAdapter.ReportsMonthPageId);
+            } else if (e.Id == DrawerListAdapter.ReportsYearPageId) {
+                OpenPage (DrawerListAdapter.ReportsYearPageId);
             } else if (e.Id == DrawerListAdapter.SettingsPageId) {
                 OpenPage (DrawerListAdapter.SettingsPageId);
 
@@ -303,8 +328,7 @@ namespace Toggl.Joey.UI.Activities
             return DateUtils.GetRelativeTimeSpanString (lastSyncInMillis, NowInMillis, 0L);
         }
 
-        public TimerComponent Timer
-        {
+        public TimerComponent Timer {
             get { return barTimer; }
         }
     }
