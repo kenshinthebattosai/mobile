@@ -147,6 +147,8 @@
     <string name="ReportsLastYear">Last Year</string>
     <string name="ReportsPieChartEmptyHeader">Nothing yet!</string>
     <string name="ReportsPieChartEmptyText">There is no data for the selected\nperiod to display anything.</string>
+    <string name="ReportsPieChartLoadingHeader">Loading...</string>
+    <string name="ReportsPieChartLoadingText">Getting report data from server.</string>
     <string name="ReportsListViewNoProject">(no project)</string>
 
     

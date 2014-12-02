@@ -6,6 +6,7 @@ using Android.Graphics;
 using Android.Util;
 using Android.Views;
 using Toggl.Phoebe.Data;
+using Android.Text;
 
 namespace Toggl.Joey.UI.Views
 {
@@ -35,6 +36,9 @@ namespace Toggl.Joey.UI.Views
         private int lineTextSize = 20;
         private Bitmap tempBitmap;
         private ZoomLevel zoomLevel;
+        private Paint emptyText = new Paint ();
+        private Paint chartCenterText = new Paint ();
+        private Color emptyStateColor = Color.ParseColor ("#808080");
 
         public BarChart (Context context, IAttributeSet attrs) : base (context, attrs)
         {
@@ -161,7 +165,41 @@ namespace Toggl.Joey.UI.Views
                 baseBitmap = BaseBitmap ();
             }
             canvas.DrawBitmap (baseBitmap, 0, 0, canvasPaint);
+            var isEmpty = true;
 
+            foreach (BarItem p in bars) {
+                if ((int)p.Value > 0) {
+                    isEmpty = false;
+                }
+            }
+            if (bars.Count == 0 || isEmpty) {
+                string header;
+                string text;
+                if (bars.Count > 0) {
+                    header = Resources.GetText (Resource.String.ReportsPieChartEmptyHeader);
+                    text = Resources.GetText (Resource.String.ReportsPieChartEmptyText);
+                } else {
+                    header = Resources.GetText (Resource.String.ReportsPieChartLoadingHeader);
+                    text = Resources.GetText (Resource.String.ReportsPieChartLoadingText);
+                }
+                float centerX = Width / 2;
+                float centerY = Height / 2 - 20;
+                emptyText.Color = emptyStateColor;
+                emptyText.TextAlign = Paint.Align.Center;
+                emptyText.AntiAlias = true;
+                emptyText.TextSize = 30;
+                canvas.DrawText (header, centerX, centerY, emptyText);
+                var textPaint = new TextPaint ();
+                textPaint.Color = emptyStateColor;
+                textPaint.TextAlign = Paint.Align.Center;
+                textPaint.AntiAlias = true;
+                textPaint.TextSize = 25;
+
+                StaticLayout emptyStateText = new StaticLayout (text, textPaint, 500, StaticLayout.Alignment.AlignNormal, 1, 0, false);
+                canvas.Translate (centerX, centerY + 10);
+                emptyStateText.Draw (canvas);
+                return;
+            }
             float usableWidth = Width - timeColumn;
             float ceilingSeconds = (float)CeilingValue * 3600F;
             float loadAnimation = animating ? (float)(animationProgress / 100F) : 1;
