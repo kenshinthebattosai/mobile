@@ -55,7 +55,7 @@ namespace Toggl.Joey.UI.Fragments
             base.OnDestroyView ();
         }
 
-        public ZoomLevel ZoomPeriod{
+        public ZoomLevel ZoomPeriod {
             get {
                 return zoomPeriod;
             }
@@ -71,7 +71,6 @@ namespace Toggl.Joey.UI.Fragments
             adapter.ZoomLevel = ZoomPeriod;
             adapter.ClearFragmentList ();
             adapter.NotifyDataSetChanged ();
-            viewPager.CurrentItem = PagesCount / 2;
             UpdatePeriod ();
         }
 
@@ -182,7 +181,7 @@ namespace Toggl.Joey.UI.Fragments
             private ZoomLevel zoomLevel = ZoomLevel.Week;
             private FragmentManager fragmentManager;
 
-            public ZoomLevel ZoomLevel{
+            public ZoomLevel ZoomLevel {
                 get {
                     return zoomLevel;
                 }
@@ -200,7 +199,7 @@ namespace Toggl.Joey.UI.Fragments
                 get { return PagesCount; }
             }
 
-            public void ClearFragmentList()
+            public void ClearFragmentList ()
             {
                 fragmentManager.Fragments.Clear ();
             }
