@@ -91,27 +91,21 @@ namespace Toggl.Joey.UI.Fragments
 
         private async void LoadElements ()
         {
-            Console.WriteLine ("loading elements, backDate: {0}", backDate);
             await LoadData ();
-            Console.WriteLine ("data loaded, backDate: {0}", backDate);
-
             totalValue.Text = summaryReport.TotalGrand;
             billableValue.Text = summaryReport.TotalBillale;
             EnsureAdapter ();
             GeneratePieChart ();
             GenerateBarChart ();
             StretchUpperView ();
-//            StretchListView ();
+            StretchListView ();
             mainView.BarChartSnapPos = 0;
             mainView.InnerList = ListView;
             mainView.InnerPieChart = pieChart;
-            Console.WriteLine ("loading elements end, backDate:  {0}", backDate);
-
         }
 
         private void StretchUpperView ()
         {
-//            Console.WriteLine ("Strech upper  view");
             var lp = (ViewGroup.MarginLayoutParams)barChart.LayoutParameters;
             lp.BottomMargin = mainView.Height - barChart.Bottom - pieChart.Height / 3;
             mainView.PieChartSnapPos = barChart.Bottom + lp.BottomMargin;
@@ -120,14 +114,11 @@ namespace Toggl.Joey.UI.Fragments
 
         private void StretchListView ()
         {
-            Console.WriteLine ("Strech list view");
             var listViewHeight = mainView.Height - pieChart.Height;
             var layoutParams = ListView.LayoutParameters;
             layoutParams.Height = listViewHeight;
             ListView.LayoutParameters = layoutParams;
             ListView.RequestLayout ();
-            Console.WriteLine ("list stretched");
-
         }
 
         private void GenerateBarChart ()

@@ -204,17 +204,14 @@ namespace Toggl.Joey.UI.Activities
                 DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.ReportsWeekPageId), true);
                 drawerAdapter.ExpandCollapse (DrawerListAdapter.ReportsPageId);
                 reportFragment.Value.ZoomPeriod = ZoomLevel.Week;
-
             } else if (id == DrawerListAdapter.ReportsMonthPageId) {
                 DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.ReportsMonthPageId), true);
                 drawerAdapter.ExpandCollapse (DrawerListAdapter.ReportsPageId);
                 reportFragment.Value.ZoomPeriod = ZoomLevel.Month;
-
             } else if (id == DrawerListAdapter.ReportsYearPageId) {
                 DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.ReportsYearPageId), true);
                 drawerAdapter.ExpandCollapse (DrawerListAdapter.ReportsPageId);
                 reportFragment.Value.ZoomPeriod = ZoomLevel.Year;
-
             } else if (id == DrawerListAdapter.FeedbackPageId) {
                 DrawerListView.SetItemChecked (drawerAdapter.GetItemPosition (DrawerListAdapter.FeedbackPageId), true);
                 drawerAdapter.ExpandCollapse (DrawerListAdapter.FeedbackPageId);

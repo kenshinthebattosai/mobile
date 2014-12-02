@@ -67,15 +67,10 @@ namespace Toggl.Joey.UI.Fragments
 
         private void UpdatePager ()
         {
-            Console.WriteLine ("Updating");
-            Console.WriteLine ("zoomlevel");
-//
-//            viewPager.Adapter = new MainPagerAdapter (ChildFragmentManager);
             var adapter = (MainPagerAdapter)viewPager.Adapter;
             adapter.ZoomLevel = ZoomPeriod;
-            viewPager.CurrentItem = PagesCount / 2;
-
-            Console.WriteLine ("PagesCount: {0}", PagesCount / 2);
+            adapter.ClearFragmentList ();
+            adapter.NotifyDataSetChanged ();
             viewPager.CurrentItem = PagesCount / 2;
             UpdatePeriod ();
         }
@@ -109,6 +104,8 @@ namespace Toggl.Joey.UI.Fragments
             }
 
             var adapter = (MainPagerAdapter)viewPager.Adapter;
+            adapter.ZoomLevel = ZoomPeriod;
+
             if (adapter != null) {
                 var frag = (ReportsFragment)adapter.GetItem (idx);
                 frag.UserVisibleHint = true;
@@ -191,7 +188,6 @@ namespace Toggl.Joey.UI.Fragments
                 }
                 set {
                     zoomLevel = value;
-                    Reset ();
                 }
             }
 
@@ -200,15 +196,13 @@ namespace Toggl.Joey.UI.Fragments
                 fragmentManager = fm;
             }
 
-            public void Reset ()
-            {
-                if (fragmentManager.Fragments != null) {
-                    fragmentManager.Fragments.Clear ();
-                }
-            }
-
             public override int Count {
                 get { return PagesCount; }
+            }
+
+            public void ClearFragmentList()
+            {
+                fragmentManager.Fragments.Clear ();
             }
 
             public override int GetItemPosition (Java.Lang.Object @object)
@@ -218,7 +212,6 @@ namespace Toggl.Joey.UI.Fragments
 
             public override Fragment GetItem (int position)
             {
-                Console.WriteLine ("position: {0}, query: {1}", position, position - PagesCount / 2);
                 return new ReportsFragment (position - PagesCount / 2, zoomLevel);
             }
         }

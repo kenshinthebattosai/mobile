@@ -245,7 +245,6 @@ namespace Toggl.Joey.UI.Views
                 canvasPaint.Color = emptyBarColor;
                 canvasPaint.TextSize = 20;
                 if (zoomLevel != ZoomLevel.Month || (zoomLevel == ZoomLevel.Month && count % 3 == 0)) {
-                    Console.WriteLine ("count : {0}", count);
                     canvasPaint.TextSize = lineTextSize;
                     canvasPaint.Color = emptyBarColor;
 
