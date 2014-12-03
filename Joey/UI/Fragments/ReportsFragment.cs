@@ -138,8 +138,8 @@ namespace Toggl.Joey.UI.Fragments
                 barChart.AddBar (bar);
             }
             barChart.CeilingValue = summaryReport.MaxTotal;
-            barChart.BarTitles = summaryReport.ChartRowLabels;
-            barChart.LineTitles = summaryReport.ChartTimeLabels;
+            barChart.YAxisLabels = summaryReport.ChartRowLabels;
+            barChart.XAxisLabels = summaryReport.ChartTimeLabels;
             barChart.Refresh ();
         }
 
