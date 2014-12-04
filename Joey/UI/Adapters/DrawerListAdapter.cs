@@ -93,6 +93,13 @@ namespace Toggl.Joey.UI.Adapters
             get { return 3; }
         }
 
+        public int GetParentPosition(int pos)
+        {
+            if (rowItems [pos].ChildOf == 0)
+                return -1;
+            return GetItemPosition (rowItems [pos].ChildOf);
+        }
+
         public override int GetItemViewType (int position)
         {
             if (position == 0) {
@@ -178,7 +185,7 @@ namespace Toggl.Joey.UI.Adapters
         public void ExpandCollapse (int position)
         {
             rowItems = collapsedRowItems;
-            if (rowItems [position].SubItems == null) {
+            if (collapsedRowItems [position].SubItems == null) {
                 return;
             }
             if (rowItems [position].SubItems.Count > 0) {
