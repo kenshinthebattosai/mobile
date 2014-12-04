@@ -210,7 +210,13 @@ namespace Toggl.Joey.UI.Activities
                 drawerAdapter.ExpandCollapse (DrawerListAdapter.SettingsPageId);
             } else if (id == DrawerListAdapter.ReportsPageId) {
                 drawerAdapter.ExpandCollapse (DrawerListAdapter.ReportsPageId);
-                id = DrawerListAdapter.ReportsWeekPageId;
+                if (reportFragment.Value.ZoomPeriod == ZoomLevel.Week) {
+                    id = DrawerListAdapter.ReportsWeekPageId;
+                } else if (reportFragment.Value.ZoomPeriod == ZoomLevel.Month) {
+                    id = DrawerListAdapter.ReportsMonthPageId;
+                } else {
+                    id = DrawerListAdapter.ReportsYearPageId;
+                }
                 OpenFragment (reportFragment.Value);
             } else if (id == DrawerListAdapter.ReportsWeekPageId) {
                 reportFragment.Value.ZoomPeriod = ZoomLevel.Week;
