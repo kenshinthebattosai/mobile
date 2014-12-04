@@ -102,6 +102,8 @@ namespace Toggl.Joey.UI.Fragments
             mainView.BarChartSnapPos = 0;
             mainView.InnerList = ListView;
             mainView.InnerPieChart = pieChart;
+            mainView.InnerBarChart = barChart;
+
         }
 
         private void StretchUpperView ()

@@ -14,12 +14,14 @@ namespace Toggl.Joey.UI.Views
         public int PieChartSnapPos = 0;
         public ListView InnerList;
         public PieChart InnerPieChart;
+        public BarChart InnerBarChart;
         private const float snapPadding = 30;
         private GestureDetectorCompat gestureDetector;
         private int currentSnap = 0;
         private bool autoScrolling = false;
         private bool scrollRegistered = false;
         private bool listTouch = false;
+        private bool barChartTouch = false;
 
 
         public ReportsScrollView (Context context) :
@@ -52,6 +54,10 @@ namespace Toggl.Joey.UI.Views
                 listTouch = true;
                 gestureDetector.OnTouchEvent (ev);
                 return false;
+            } else if (currentSnap == BarChartSnapPos) {
+                barChartTouch = true;
+                gestureDetector.OnTouchEvent (ev);
+                return false;
             }
 
             return true;
@@ -65,7 +71,11 @@ namespace Toggl.Joey.UI.Views
             } else if (currentSnap == PieChartSnapPos) {
                 gestureDetector.OnTouchEvent (ev);
                 return true;
+            }else if (currentSnap == BarChartSnapPos && !scrollRegistered) {
+                gestureDetector.OnTouchEvent (ev);
+                return true;
             }
+
             if (ev.Action == MotionEventActions.Up) {
                 ResolveSnap ();
             }
@@ -132,6 +142,9 @@ namespace Toggl.Joey.UI.Views
                 InnerList.OnTouchEvent (e);
                 listTouch = false;
                 return true;
+            }
+            if (barChartTouch) {
+                InnerBarChart.OnTouchEvent (e);
             }
             scrollRegistered = false;
             InnerPieChart.OnTouchEvent (e);

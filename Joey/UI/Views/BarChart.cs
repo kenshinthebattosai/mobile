@@ -10,6 +10,9 @@ using Toggl.Phoebe.Data;
 
 namespace Toggl.Joey.UI.Views
 {
+
+    public delegate void BarClickedEventHandler (int position);
+
     public class BarChart : View
     {
         public int CeilingValue;
@@ -20,8 +23,8 @@ namespace Toggl.Joey.UI.Views
         private Paint emptyText = new Paint ();
         private Rect basePlate = new Rect ();
         private Rect textBoundsRect = new Rect();
-        private Rect rectangle = new Rect ();
-        private Rect notBillableRectangle = new Rect ();
+        private RectF rectangle = new RectF ();
+        private RectF notBillableRectangle = new RectF ();
         private Canvas baseCanvas;
         private Bitmap baseBitmap;
         private TextPaint textPaint = new TextPaint();
@@ -46,12 +49,46 @@ namespace Toggl.Joey.UI.Views
         private float loadAnimation;
         private float ceilingSeconds;
 
+        private int selectedBar = - 1;
+        private int deselectedIndex = -1;
+        private IOnBarClickedListener listener;
+        public event BarClickedEventHandler BarClicked;
+
         public BarChart (Context context, IAttributeSet attrs) : base (context, attrs)
         {
         }
 
         public BarChart (Context context, IAttributeSet attrs, int defStyle) : base (context, attrs, defStyle)
         {
+        }
+
+        public void SetOnSliceClickedListener (IOnBarClickedListener listener)
+        {
+            this.listener = listener;
+        }
+
+        public interface IOnBarClickedListener
+        {
+            void OnClick (int index);
+        }
+
+        public override bool OnTouchEvent (MotionEvent ev)
+        {
+            Console.WriteLine ("on touch event");
+            Point point = new Point ();
+            point.X = (int)ev.GetX ();
+            point.Y = (int)ev.GetY ();
+            Console.WriteLine ("X: {0}, Y: {1}", point.X, point.Y);
+            int count = 0;
+            foreach (BarItem bar in dataObject) {
+                Region r = new Region ();
+                r.SetPath (bar.Path, bar.Region);
+                if (r.Contains (point.X, point.Y)) {
+                    Console.WriteLine ("catched a click: {0}, count: {1}", bar.Value, count);
+                }
+                count++;
+            }
+            return true;
         }
 
         public void Reset ()
@@ -225,7 +262,6 @@ namespace Toggl.Joey.UI.Views
             usableWidth = Width - leftColumnWidth - (Width - leftColumnWidth) / 6;
 
             for (int i = 0; i < dataObject.Count; i++) {
-
                 MakeBarAt (i);
                 if (notBillableRectangle.Width() > 0) {
                     canvasPaint.Color = lightBlueBarColor;
@@ -248,19 +284,18 @@ namespace Toggl.Joey.UI.Views
             }
         }
 
-        private void MakeBarAt(int count)
+        private void MakeBarAt(int pos)
         {
-            if (dataObject [count].Value == 0) {
+            if (dataObject [pos].Value == 0) {
                 rectangle.Set (
                     leftColumnWidth,
-                    BarTopPosition (count),
+                    BarTopPosition (pos),
                     leftColumnWidth + yAxisLineWidth,
-                    BarBottomPosition (count)
+                    BarBottomPosition (pos)
                 );
                 return;
             }
-
-            var bar = dataObject [count];
+            var bar = dataObject [pos];
             if (bar.Billable < bar.Value) {
                 float notBillable = bar.Value - bar.Billable;
                 float totalWidth = (usableWidth * (bar.Value / ceilingSeconds));
@@ -269,34 +304,49 @@ namespace Toggl.Joey.UI.Views
                 if ((loadAnimation * totalWidth) > billableWidth) {
                     rectangle.Set (
                         leftColumnWidth,
-                        BarTopPosition (count),
+                        BarTopPosition (pos),
                         leftColumnWidth + (int)(billableWidth),
-                        BarBottomPosition (count)
+                        BarBottomPosition (pos)
                     );
                     notBillableRectangle.Set (
                         leftColumnWidth,
-                        BarTopPosition (count),
+                        BarTopPosition (pos),
                         leftColumnWidth + (int)(notBillableWidth * loadAnimation + billableWidth),
-                        BarBottomPosition (count)
+                        BarBottomPosition (pos)
                     );
                 } else {
                     rectangle.Set (
                         leftColumnWidth,
-                        BarTopPosition (count),
+                        BarTopPosition (pos),
                         leftColumnWidth + (int)(loadAnimation * totalWidth),
-                        BarBottomPosition (count)
+                        BarBottomPosition (pos)
                     );
                 }
             } else {
-                float totalWidth = (usableWidth * (bar.Value / ceilingSeconds));
                 rectangle.Set (
                     leftColumnWidth,
-                    BarTopPosition (count),
-                    leftColumnWidth + (int)(loadAnimation * totalWidth),
-                    BarBottomPosition (count)
+                    BarTopPosition (pos),
+                    leftColumnWidth + (int)(loadAnimation * (usableWidth * (bar.Value / ceilingSeconds))),
+                    BarBottomPosition (pos)
                 );
-                notBillableRectangle = new Rect ();;
+                notBillableRectangle = new RectF ();;
             }
+            Console.WriteLine ("exists:  {0}", dataObject [pos].Path);
+//            if (dataObject [pos].Path == null) { // only do it once.
+            Console.WriteLine ("making paths and regions");
+
+            dataObject [pos].Path = new Path ();
+            dataObject [pos].Path.AddRect(rectangle, Path.Direction.Cw);
+            if (notBillableRectangle.Width() > 0) {
+                dataObject [pos].Path.AddRect (notBillableRectangle, Path.Direction.Cw);
+            }
+            dataObject [pos].Region = new Region (
+                leftColumnWidth,
+                BarTopPosition (pos),
+                leftColumnWidth + (int) (usableWidth * (bar.Value / ceilingSeconds)),
+                BarBottomPosition (pos)
+            );
+//            }
         }
 
         private int BarTopPosition (int count)
@@ -374,9 +424,8 @@ namespace Toggl.Joey.UI.Views
 
         public float Billable { get; set; }
 
-        public Path Path { get; set; }
-
-        public Region Region { get; set; }
+        public Path Path = new Path ();
+        public Region Region = new Region ();
     }
 }
 
