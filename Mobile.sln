@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Contrib", "Contrib", "{D9D6
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cirrious.FluentLayouts.Touch", "Contrib\Cirrious.FluentLayout\Cirrious.FluentLayout\Cirrious.FluentLayouts.Touch.csproj", "{75D2DA9D-DFD4-49A1-98FB-FE0F0677EF0F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Emma", "Emma\Emma.csproj", "{6DDC0688-0534-466A-9134-0E331AC0E998}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -30,6 +32,24 @@ Global
 		Test|Any CPU = Test|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Ad-Hoc|iPhone.ActiveCfg = Ad-Hoc|iPhone
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Ad-Hoc|iPhone.Build.0 = Ad-Hoc|iPhone
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.AppStore|iPhone.ActiveCfg = AppStore|iPhone
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.AppStore|iPhone.Build.0 = AppStore|iPhone
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Debug|iPhone.ActiveCfg = Debug|iPhone
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Debug|iPhone.Build.0 = Debug|iPhone
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Debug|iPhoneSimulator.ActiveCfg = Debug|iPhoneSimulator
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Debug|iPhoneSimulator.Build.0 = Debug|iPhoneSimulator
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Debug|x86.ActiveCfg = Debug|iPhoneSimulator
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Debug|x86.Build.0 = Debug|iPhoneSimulator
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Release|iPhone.ActiveCfg = Release|iPhone
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Release|iPhone.Build.0 = Release|iPhone
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Release|iPhoneSimulator.ActiveCfg = Release|iPhoneSimulator
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Release|iPhoneSimulator.Build.0 = Release|iPhoneSimulator
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Release|x86.ActiveCfg = Release|iPhoneSimulator
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Release|x86.Build.0 = Release|iPhoneSimulator
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Test|Any CPU.ActiveCfg = Debug|iPhoneSimulator
+		{6DDC0688-0534-466A-9134-0E331AC0E998}.Test|Any CPU.Build.0 = Debug|iPhoneSimulator
 		{735F910D-2550-48D1-B577-735721EFE6DF}.Ad-Hoc|iPhone.ActiveCfg = Release|Any CPU
 		{735F910D-2550-48D1-B577-735721EFE6DF}.AppStore|iPhone.ActiveCfg = Release|Any CPU
 		{735F910D-2550-48D1-B577-735721EFE6DF}.Debug|iPhone.ActiveCfg = Debug|Any CPU
@@ -145,7 +165,6 @@ Global
 		{75D2DA9D-DFD4-49A1-98FB-FE0F0677EF0F} = {D9D618F5-BDB0-4273-8FE0-164C2B699D1F}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = Ross\Ross.csproj
 		Policies = $0
 		$0.DotNetNamingPolicy = $1
 		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
