@@ -18,7 +18,7 @@ setup:
 	git update-index --assume-unchanged Phoebe/Build.cs
 
 format:
-	@astyle --options=.astylerc --formatted --suffix=none $$(find Joey Ross Phoebe Tests -type f -name '*.cs')
+	@astyle --options=.astylerc --formatted --suffix=none $$(find Joey Ross Phoebe Emma Tests -type f -name '*.cs')
 
 ios-patch-release:
 	@echo "This is a workaround for iTunesConnect rejecting the app bundle due to GooglePlay component signatures."
