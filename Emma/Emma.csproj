@@ -106,13 +106,6 @@
     <None Include="Entitlements.plist" />
   </ItemGroup>
   <ItemGroup>
-    <InterfaceDefinition Include="MainInterface.storyboard" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="TodayViewController.cs" />
-    <Compile Include="TodayViewController.designer.cs">
-      <DependentUpon>TodayViewController.cs</DependentUpon>
-    </Compile>
     <Compile Include="WidgetViewController.cs" />
     <Compile Include="Views\WidgetProjectCell.cs" />
     <Compile Include="Views\TopView.cs" />

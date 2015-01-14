@@ -5,20 +5,47 @@ using NotificationCenter;
 using Cirrious.FluentLayouts.Touch;
 using System.Collections.Generic;
 using Toggl.Emma.Views;
+using System.Timers;
 
 namespace Toggl.Emma
 {
     [Register ("WidgetViewController")]
     public class WidgetViewController : UIViewController, INCWidgetProviding
     {
+        public static string IsStartedKey = "is_started_key";
+        public static string MillisecondsKey = "milliseconds_key";
+
         private TopView topView;
         private UITableView tableView;
+        private Timer timer;
+        private NSUserDefaults nsUserDefaults;
+
+        public NSUserDefaults UserDefaults
+        {
+            get {
+                if ( nsUserDefaults == null) {
+                    nsUserDefaults = new NSUserDefaults ("group.com.toggl.dummycontainer", NSUserDefaultsType.SuiteName);
+                }
+                return nsUserDefaults;
+            }
+        }
+
+        public Timer Timer
+        {
+            get {
+                if (timer == null)
+                    timer = new Timer {
+                    Interval = 1000,
+                };
+                return timer;
+            }
+        }
 
         public override void LoadView ()
         {
             base.LoadView ();
 
-            var v = new UIView () {
+            var v = new UIView {
                 BackgroundColor = UIColor.Clear
             };
 
@@ -54,6 +81,8 @@ namespace Toggl.Emma
         {
             base.ViewDidLoad ();
 
+            topView.StartBtnPressed += (sender, e) => nsUserDefaults.SetBool (topView.IsRunning, IsStartedKey);
+
             // remove
             var projects = new List<string> ();
             var random = new Random ();
@@ -64,8 +93,37 @@ namespace Toggl.Emma
             tableView.RegisterClassForCellReuse (typeof (WidgetProjectCell), WidgetProjectCell.WidgetProjectCellId);
             tableView.Source = new ProjectDataSource ( projects);
             tableView.Delegate = new ProjectTableViewDelegate ();
-            Console.WriteLine (tableView.Frame.Height);
-            Console.WriteLine (View.Frame.Height);
+
+            Timer.Elapsed += OnTimedEvent;
+            Timer.Start ();
+
+            UpdateContent ();
+        }
+
+        public override void ViewDidUnload ()
+        {
+            Timer.Elapsed -= OnTimedEvent;
+            Timer.Stop ();
+            base.ViewDidUnload ();
+        }
+
+        private void UpdateContent()
+        {
+            topView.IsRunning = UserDefaults.BoolForKey (IsStartedKey);
+            string time = UserDefaults.StringForKey (MillisecondsKey);
+            topView.TimeValue = string.IsNullOrEmpty (time) ? topView.TimeValue : time;
+        }
+
+        private void OnTimedEvent (object source, ElapsedEventArgs e)
+        {
+            InvokeOnMainThread (UpdateContent);
+        }
+
+        [Export ("widgetPerformUpdateWithCompletionHandler:")]
+        public void WidgetPerformUpdate (Action<NCUpdateResult> completionHandler)
+        {
+            UpdateContent ();
+            completionHandler (NCUpdateResult.NewData);
         }
 
         [Export ("widgetMarginInsetsForProposedMarginInsets:")]
