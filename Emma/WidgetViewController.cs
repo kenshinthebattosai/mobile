@@ -15,7 +15,6 @@ namespace Toggl.Emma
         public static string IsStartedKey = "is_started_key";
         public static string MillisecondsKey = "milliseconds_key";
 
-        private TopView topView;
         private UITableView tableView;
         private Timer timer;
         private NSUserDefaults nsUserDefaults;
@@ -41,17 +40,17 @@ namespace Toggl.Emma
             }
         }
 
+        private nfloat height = 250; // 3 x 60f(cells),
+        private nfloat marginTop = 10;
+
         public override void LoadView ()
         {
             base.LoadView ();
 
             var v = new UIView {
-                BackgroundColor = UIColor.Clear
+                BackgroundColor = UIColor.Clear,
+                Frame = new CoreGraphics.CGRect ( 0,0, UIScreen.MainScreen.Bounds.Width, height),
             };
-
-            v.Add (topView = new TopView {
-                TranslatesAutoresizingMaskIntoConstraints = false,
-            });
 
             v.Add (tableView = new UITableView {
                 TranslatesAutoresizingMaskIntoConstraints = false,
@@ -62,13 +61,10 @@ namespace Toggl.Emma
             });
 
             v.AddConstraints (
-                topView.AtTopOf (v),
-                topView.WithSameWidth (v),
-                topView.Height().EqualTo ( 60f),
 
+                tableView.AtTopOf (v),
                 tableView.WithSameWidth ( v),
-                tableView.Below ( topView),
-                tableView.Height().EqualTo ( 180f).SetPriority ( UILayoutPriority.DefaultLow), // 3 x 60f(cells),
+                tableView.Height().EqualTo ( height - marginTop).SetPriority ( UILayoutPriority.DefaultLow),
                 tableView.AtBottomOf ( v),
 
                 null
@@ -81,13 +77,31 @@ namespace Toggl.Emma
         {
             base.ViewDidLoad ();
 
-            topView.StartBtnPressed += (sender, e) => nsUserDefaults.SetBool (topView.IsRunning, IsStartedKey);
+            // First update of data from UserDefaults
 
             // remove
-            var projects = new List<string> ();
-            var random = new Random ();
+            var projects = new List<ProjectData> ();
+
+            var p = new ProjectData {
+                ProjectName = "Empty project",
+                ClientName = "",
+                Color = ConvertUIColortoHex ( UIColor.White),
+                IsEmpty = true,
+                TimeValue = "00:00:00",
+                IsRunning = false
+            };
+
+            projects.Add ( p);
+
             for (int i = 0; i < 3; i++) {
-                projects.Add ("Project - " + random.Next ());
+                p = new ProjectData {
+                    ProjectName = "Project Name " + i,
+                    ClientName = "Client Name " + i,
+                    Color = ConvertUIColortoHex ( UIColor.White),
+                    IsEmpty = false,
+                    TimeValue = "00:00:0" + i,
+                };
+                projects.Add (p);
             }
 
             tableView.RegisterClassForCellReuse (typeof (WidgetProjectCell), WidgetProjectCell.WidgetProjectCellId);
@@ -100,6 +114,20 @@ namespace Toggl.Emma
             UpdateContent ();
         }
 
+        private string ConvertUIColortoHex ( UIColor color)
+        {
+            nfloat fred;
+            nfloat fblue;
+            nfloat fgreen;
+            nfloat alpha;
+            color.GetRGBA ( out fred, out fblue, out fgreen, out alpha);
+
+            var r = (nint)Math.Round (fred * 255);
+            var b = (nint)Math.Round (fblue * 255);
+            var g = (nint)Math.Round (fgreen * 255);
+            return "#" + r.ToString ("X2") + g.ToString ("X2") + b.ToString ("X2");
+        }
+
         public override void ViewDidUnload ()
         {
             Timer.Elapsed -= OnTimedEvent;
@@ -109,9 +137,7 @@ namespace Toggl.Emma
 
         private void UpdateContent()
         {
-            topView.IsRunning = UserDefaults.BoolForKey (IsStartedKey);
-            string time = UserDefaults.StringForKey (MillisecondsKey);
-            topView.TimeValue = string.IsNullOrEmpty (time) ? topView.TimeValue : time;
+            // Periodicall update content from UserDefaults
         }
 
         private void OnTimedEvent (object source, ElapsedEventArgs e)
@@ -129,15 +155,17 @@ namespace Toggl.Emma
         [Export ("widgetMarginInsetsForProposedMarginInsets:")]
         public UIEdgeInsets GetWidgetMarginInsets (UIEdgeInsets defaultMarginInsets)
         {
+            defaultMarginInsets.Left = 0f;
             defaultMarginInsets.Bottom = 0f;
+            defaultMarginInsets.Top = marginTop;
             return defaultMarginInsets;
         }
 
         internal class ProjectDataSource : UITableViewSource
         {
-            readonly List<string> items;
+            readonly List<ProjectData> items;
 
-            public ProjectDataSource ( List<string> items)
+            public ProjectDataSource ( List<ProjectData> items)
             {
                 this.items = items;
             }
@@ -146,8 +174,7 @@ namespace Toggl.Emma
             {
                 var cell = (WidgetProjectCell) tableView.DequeueReusableCell (WidgetProjectCell.WidgetProjectCellId, indexPath);
                 cell.TranslatesAutoresizingMaskIntoConstraints = false;
-                cell.ProjectName = items[ indexPath.Row];
-                cell.IndentationLevel = 0;
+                cell.Data = items[ indexPath.Row];
                 return cell;
             }
 
@@ -164,7 +191,9 @@ namespace Toggl.Emma
                 cell.BackgroundColor = UIColor.Clear;
 
                 if (cell.RespondsToSelector (new ObjCRuntime.Selector ("setSeparatorInset:"))) {
-                    cell.SeparatorInset = UIEdgeInsets.Zero;
+                    var separator = cell.SeparatorInset;
+                    separator.Left = 50;
+                    cell.SeparatorInset = separator;
                 }
 
                 if (cell.RespondsToSelector (new ObjCRuntime.Selector ("setPreservesSuperviewLayoutMargins:"))) {

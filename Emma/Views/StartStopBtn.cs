@@ -1,5 +1,5 @@
-﻿using CoreGraphics;
-using UIKit;
+﻿using UIKit;
+using CoreGraphics;
 
 namespace Toggl.Emma.Views
 {
@@ -14,10 +14,22 @@ namespace Toggl.Emma.Views
             }
 
             set {
-                if (value == isRunning) {
-                    return;
-                }
                 isRunning = value;
+                isActive |= isRunning;
+                SetNeedsDisplay ();
+            }
+        }
+
+        private bool isActive;
+
+        public bool IsActive
+        {
+            get {
+                return isActive;
+            }
+
+            set {
+                isActive = value;
                 SetNeedsDisplay ();
             }
         }
@@ -30,6 +42,7 @@ namespace Toggl.Emma.Views
         public StartStopBtn ()
         {
             isRunning = false;
+            isActive = false;
         }
 
         public override void Draw (CGRect rect)
@@ -41,36 +54,57 @@ namespace Toggl.Emma.Views
 
             using (var context = UIGraphics.GetCurrentContext ()) {
 
-                if (!isRunning) {
+                UIBezierPath ovalPath;
+                UIBezierPath bezierPath;
 
+                if ( isActive) {
+                    if ( isRunning) {
+
+                        // Oval Drawing
+                        ovalPath = UIBezierPath.FromOval (new CGRect (posX, posY, radius, radius));
+                        redColor.SetFill();
+                        ovalPath.Fill();
+
+                        // Rectangle Drawing
+                        var rectanglePath = UIBezierPath.FromRect (new CGRect ( posX + 12.0f, posY + 12.0f, 8.0f, 8.0f));
+                        UIColor.White.SetFill();
+                        rectanglePath.Fill();
+
+                    } else {
+
+                        // Oval Drawing
+                        ovalPath = UIBezierPath.FromOval (new CGRect ( posX, posY, radius, radius));
+                        greenColor.SetFill ();
+                        ovalPath.Fill ();
+
+                        // Bezier Drawing
+                        bezierPath = new UIBezierPath ();
+                        bezierPath.MoveTo (new CGPoint ( posX + 13.0f, posY + 8.0f));
+                        bezierPath.AddLineTo (new CGPoint (posX + 20.0f, posY + 16.47f));
+                        bezierPath.AddLineTo (new CGPoint ( posX + 13.0f, posY + 24.0f));
+                        UIColor.White.SetStroke ();
+                        bezierPath.LineWidth = 1.0f;
+                        bezierPath.Stroke ();
+                    }
+                } else {
                     // Oval Drawing
-                    var ovalPath = UIBezierPath.FromOval (new CGRect ( posX, posY, radius, radius));
-                    greenColor.SetFill ();
-                    ovalPath.Fill ();
+                    UIColor.White.SetStroke ();
+
+                    ovalPath = UIBezierPath.FromOval (new CGRect ( posX, posY, radius, radius));
+                    ovalPath.LineWidth = 1.0f;
+                    ovalPath.Stroke ();
+                    context.AddPath ( ovalPath.CGPath);
 
                     // Bezier Drawing
-                    var bezierPath = new UIBezierPath ();
+                    bezierPath = new UIBezierPath ();
                     bezierPath.MoveTo (new CGPoint ( posX + 13.0f, posY + 8.0f));
                     bezierPath.AddLineTo (new CGPoint (posX + 20.0f, posY + 16.47f));
                     bezierPath.AddLineTo (new CGPoint ( posX + 13.0f, posY + 24.0f));
-                    UIColor.White.SetStroke ();
                     bezierPath.LineWidth = 1.0f;
                     bezierPath.Stroke ();
-
-                } else {
-
-                    // Oval Drawing
-                    var ovalPath = UIBezierPath.FromOval (new CGRect (posX, posY, 32.0f, 32.0f));
-                    redColor.SetFill();
-                    ovalPath.Fill();
-
-                    // Rectangle Drawing
-                    var rectanglePath = UIBezierPath.FromRect (new CGRect ( posX + 12.0f, posY + 12.0f, 8.0f, 8.0f));
-                    UIColor.White.SetFill();
-                    rectanglePath.Fill();
+                    context.AddPath ( bezierPath.CGPath);
                 }
             }
         }
     }
 }
-
