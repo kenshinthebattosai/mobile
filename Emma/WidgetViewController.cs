@@ -23,7 +23,7 @@ namespace Toggl.Emma
         {
             get {
                 if ( nsUserDefaults == null) {
-                    nsUserDefaults = new NSUserDefaults ("group.com.toggl.dummycontainer", NSUserDefaultsType.SuiteName);
+                    nsUserDefaults = new NSUserDefaults ("group.com.toggl.timer", NSUserDefaultsType.SuiteName);
                 }
                 return nsUserDefaults;
             }

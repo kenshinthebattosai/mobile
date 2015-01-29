@@ -333,6 +333,11 @@
       <Project>{75D2DA9D-DFD4-49A1-98FB-FE0F0677EF0F}</Project>
       <Name>Cirrious.FluentLayouts.Touch</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Emma\Emma.csproj">
+      <Project>{6DDC0688-0534-466A-9134-0E331AC0E998}</Project>
+      <Name>Emma</Name>
+      <IsAppExtension>True</IsAppExtension>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />

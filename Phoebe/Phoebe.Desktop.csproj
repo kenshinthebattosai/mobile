@@ -35,7 +35,7 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="Bugsnag">
       <HintPath>..\packages\Toggl.Bugsnag.1.0.1\lib\net45\Bugsnag.dll</HintPath>
-    </Reference>    
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Contrib\sqlite-net\src\SQLite.cs">
