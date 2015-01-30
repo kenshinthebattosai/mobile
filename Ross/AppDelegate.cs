@@ -57,8 +57,9 @@ namespace Toggl.Ross
         public override void OnActivated (UIApplication application)
         {
             // Make sure the user data is refreshed when the application becomes active
-            ServiceContainer.Resolve<ISyncManager> ().Run (SyncMode.Full);
+            ServiceContainer.Resolve<ISyncManager> ().Run ();
             ServiceContainer.Resolve<NetworkIndicatorManager> ();
+            ServiceContainer.Resolve<WidgetSyncManager>();
 
             isResuming = true;
         }
@@ -80,6 +81,7 @@ namespace Toggl.Ross
             ServiceContainer.Register<ILogger> (() => new Logger ());
             ServiceContainer.Register<SettingsStore> ();
             ServiceContainer.Register<ISettingsStore> (() => ServiceContainer.Resolve<SettingsStore> ());
+            ServiceContainer.Register<IWidgetUpdateService> (() => new WidgetUpdateService());
             ServiceContainer.Register<ExperimentManager> (() => new ExperimentManager (
                 typeof (Toggl.Phoebe.Analytics.Experiments),
                 typeof (Toggl.Ross.Analytics.Experiments)));

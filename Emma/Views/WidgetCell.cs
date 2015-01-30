@@ -1,21 +1,22 @@
 ﻿using System;
-using UIKit;
-using Foundation;
 using Cirrious.FluentLayouts.Touch;
 using CoreGraphics;
+using Foundation;
+using UIKit;
+using System.Globalization;
 
 namespace Toggl.Emma.Views
 {
-    [Register ("WidgetProjectCell")]
-    public class WidgetProjectCell : UITableViewCell
+    [Register ("WidgetCell")]
+    public class WidgetCell : UITableViewCell
     {
-        public static NSString WidgetProjectCellId = new NSString ("WidgetProjectCellId");
+        public static NSString WidgetProjectCellId = new NSString ("WidgetCellId");
 
         public event EventHandler StartBtnPressed;
 
-        private ProjectData data;
+        private WidgetEntryData data;
 
-        public ProjectData Data
+        public WidgetEntryData Data
         {
             get {
                 return data;
@@ -28,27 +29,21 @@ namespace Toggl.Emma.Views
                 if ( data.IsEmpty) {
                     projectLabel.Text = (startBtn.IsRunning) ? "StopTogglLabel".Tr () : "StartTogglLabel".Tr ();
                 } else {
-                    projectLabel.Text = data.ProjectName;
-                    clientLabel.Text = data.ClientName;
+                    projectLabel.Text = string.IsNullOrEmpty ( data.ProjectName) ? "CellNoProject".Tr() : data.ProjectName;
+                    descriptionLabel.Text = string.IsNullOrEmpty ( data.Description) ? "CellNoDescription".Tr() : data.Description;
                 }
                 startBtn.IsRunning = data.IsRunning;
-                startBtn.IsActive = data.IsEmpty;
-                clientLabel.Hidden = data.IsEmpty;
+                startBtn.IsActive = data.IsEmpty || data.IsRunning;
+                descriptionLabel.Hidden = data.IsEmpty;
 
                 // Set time
                 timeLabel.Text = value.TimeValue;
 
                 // Set color
-                UIColor newColor;
-                try {
-                    newColor = ConvertToUIColor ( data.Color);
-                } catch (Exception ex) {
-                    newColor = UIColor.Clear;
-                }
-                colorBox.BackgroundColor = (data.IsEmpty) ? UIColor.Clear : newColor;
+                colorBox.BackgroundColor = ( data.IsEmpty) ? UIColor.Clear : UIColorFromHex ( data.Color);
 
                 projectLabel.SizeToFit();
-                clientLabel.SizeToFit();
+                descriptionLabel.SizeToFit();
                 timeLabel.SizeToFit();
             }
         }
@@ -64,19 +59,16 @@ namespace Toggl.Emma.Views
 
         private UILabel projectLabel;
         private UILabel timeLabel;
-        private UILabel clientLabel;
+        private UILabel descriptionLabel;
         private StartStopBtn startBtn;
         private UIView colorBox;
-        private nfloat boxWidth = 3;
-        private nfloat leftMargin = 60f;
 
-        public WidgetProjectCell (IntPtr handle) : base (handle)
+        public WidgetCell (IntPtr handle) : base (handle)
         {
             SelectionStyle = UITableViewCellSelectionStyle.None;
 
             ContentView.Add ( colorBox = new UIView() {
                 TranslatesAutoresizingMaskIntoConstraints = false,
-                BackgroundColor = UIColor.White
             });
 
             ContentView.Add (projectLabel = new UILabel {
@@ -86,7 +78,7 @@ namespace Toggl.Emma.Views
                 TextColor = UIColor.White,
             });
 
-            ContentView.Add (clientLabel = new UILabel {
+            ContentView.Add (descriptionLabel = new UILabel {
                 TranslatesAutoresizingMaskIntoConstraints = false,
                 Font = UIFont.FromName ( "Helvetica", 13f),
                 Text = "SubProject X",
@@ -145,9 +137,9 @@ namespace Toggl.Emma.Views
             } else {
                 ContentView.AddConstraints (
                     projectLabel.AtTopOf (ContentView, 10f),
-                    clientLabel.WithSameLeft ( projectLabel),
-                    clientLabel.Below ( projectLabel, 0f),
-                    clientLabel.AtBottomOf (ContentView, 10f),
+                    descriptionLabel.WithSameLeft ( projectLabel),
+                    descriptionLabel.Below ( projectLabel, 0f),
+                    descriptionLabel.AtBottomOf (ContentView, 10f),
                     null
                 );
             }
@@ -194,31 +186,41 @@ namespace Toggl.Emma.Views
             }
         }
 
-        public UIColor ConvertToUIColor ( string hexString)
+        private UIColor UIColorFromHex ( string hexValue, float alpha = 1f)
         {
-            hexString = hexString.Replace ("#", "");
+            hexValue = hexValue.TrimStart ('#');
 
-            if (hexString.Length == 3) {
-                hexString = hexString + hexString;
+            int rgb;
+            if (!Int32.TryParse (hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out rgb)) {
+                throw new ArgumentException ("Invalid hex string.", "hexValue");
             }
 
-            if (hexString.Length != 6) {
-                throw new Exception ("Invalid hex string");
+            switch (hexValue.Length) {
+            case 6:
+                return new UIColor (
+                           ((rgb & 0xFF0000) >> 16) / 255.0f,
+                           ((rgb & 0x00FF00) >> 8) / 255.0f,
+                           (rgb & 0x0000FF) / 255.0f,
+                           alpha
+                       );
+            case 3:
+                return new UIColor (
+                           (((rgb & 0xF00) >> 4) | ((rgb & 0xF00) >> 8)) / 255.0f,
+                           ((rgb & 0x0F0) | (rgb & 0x0F0) >> 4) / 255.0f,
+                           ((rgb & 0x00F << 4) | (rgb & 0x00F)) / 255.0f,
+                           alpha
+                       );
+            default:
+                throw new ArgumentException ("Invalid hex string.", "hexValue");
             }
-
-            nint red = nint.Parse (hexString.Substring (0,2), System.Globalization.NumberStyles.AllowHexSpecifier);
-            nint green = nint.Parse (hexString.Substring (2,2), System.Globalization.NumberStyles.AllowHexSpecifier);
-            nint blue = nint.Parse (hexString.Substring (4,2), System.Globalization.NumberStyles.AllowHexSpecifier);
-
-            return UIColor.FromRGB (red, green, blue);
         }
     }
 
-    public class ProjectData
+    public class WidgetEntryData
     {
         public string ProjectName { get; set; }
 
-        public string ClientName { get; set; }
+        public string Description { get; set; }
 
         public string TimeValue { get; set; }
 

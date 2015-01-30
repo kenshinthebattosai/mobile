@@ -1,5 +1,5 @@
-﻿using UIKit;
-using CoreGraphics;
+﻿using CoreGraphics;
+using UIKit;
 
 namespace Toggl.Emma.Views
 {
@@ -36,7 +36,7 @@ namespace Toggl.Emma.Views
 
         // Color Declarations
         private readonly UIColor greenColor = UIColor.FromRGBA (0.302f, 0.851f, 0.396f, 1.000f);
-        private readonly UIColor redColor = UIColor.FromRGBA (1.000f, 0.184f, 0.286f, 1.000f);
+        private readonly UIColor redColor = UIColor.FromRGBA (1.000f, 61f/255f, 50f/255f, 1.000f);
         private const float radius = 32.0f;
 
         public StartStopBtn ()

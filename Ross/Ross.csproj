@@ -323,6 +323,7 @@
     <Compile Include="Views\ReportView.cs" />
     <Compile Include="ViewControllers\NewTagViewController.cs" />
     <Compile Include="FluentLayoutExtensions.cs" />
+    <Compile Include="Data\WidgetUpdateService.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Phoebe\Phoebe.iOS.csproj">
