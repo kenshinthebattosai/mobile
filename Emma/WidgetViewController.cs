@@ -16,8 +16,12 @@ namespace Toggl.Emma
     {
         public static string MillisecondsKey = "milliseconds_key";
         public static string TimeEntriesKey = "time_entries_key";
+        public static string StartedEntryKey = "started_entry_key";
+        public static string ViewedEntryKey = "viewed_entry_key";
+        public static string IsUserLoggedKey = "is_logged_key";
 
         private UITableView tableView;
+        private UITextView textView;
         private Timer timer;
         private NSUserDefaults nsUserDefaults;
 
@@ -63,12 +67,27 @@ namespace Toggl.Emma
                 RowHeight = cellHeight,
             });
 
+            v.Add (textView = new UITextView {
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                Font = UIFont.FromName ( "Helvetica", 14f),
+                Text = "NoLoggedUser".Tr(),
+                TextColor = UIColor.White,
+                TextAlignment = UITextAlignment.Center,
+                BackgroundColor = UIColor.Clear,
+                Hidden = true,
+            });
+
             v.AddConstraints (
 
                 tableView.AtTopOf (v),
                 tableView.WithSameWidth ( v),
                 tableView.Height().EqualTo ( height - marginTop).SetPriority ( UILayoutPriority.DefaultLow),
                 tableView.AtBottomOf ( v),
+
+                textView.WithSameCenterX ( v),
+                textView.WithSameCenterY ( v),
+                textView.WithSameWidth ( v),
+                textView.Height().EqualTo ( cellHeight),
 
                 null
             );
@@ -79,6 +98,14 @@ namespace Toggl.Emma
         public override void ViewDidLoad ()
         {
             base.ViewDidLoad ();
+
+            // Check if user is logged
+            var isLogged = UserDefaults.BoolForKey ( IsUserLoggedKey);
+            if ( !isLogged) {
+                tableView.Hidden = true;
+                textView.Hidden = false;
+                return;
+            }
 
             // Get saved entries
             var entries = new List<WidgetEntryData>();
@@ -105,12 +132,27 @@ namespace Toggl.Emma
                 }
 
             } else {
-                entries.Add ( new WidgetEntryData { IsRunning = false, IsEmpty = true });
+                entries.Add ( new WidgetEntryData { IsEmpty = true });
             }
 
             tableView.RegisterClassForCellReuse (typeof (WidgetCell), WidgetCell.WidgetProjectCellId);
-            tableView.Source = new TableDataSource ( entries);
-            tableView.Delegate = new TableViewDelegate ();
+
+            var source = new TableDataSource ( entries);
+            var tvdelegate = new TableViewDelegate ();
+            tableView.Source = source;
+            tableView.Delegate = tvdelegate;
+
+            tvdelegate.OnPressCell += (sender, e) => {
+                var id = string.IsNullOrEmpty ( tvdelegate.SelectedCellId) ? new Guid().ToString() : tvdelegate.SelectedCellId;
+                UserDefaults.SetString ( id, ViewedEntryKey);
+                UIApplication.SharedApplication.OpenUrl (new NSUrl ("com.toggl.timer://"));
+            };
+
+            source.OnPressPlayOnCell += (sender, e) => {
+                var id = string.IsNullOrEmpty ( source.SelectedCellId) ? new Guid().ToString() : source.SelectedCellId;
+                UserDefaults.SetString ( id, StartedEntryKey);
+                UIApplication.SharedApplication.OpenUrl (new NSUrl ("com.toggl.timer://"));
+            };
 
             if ( isRunning) {
                 // Start to check time
@@ -160,6 +202,10 @@ namespace Toggl.Emma
         {
             readonly List<WidgetEntryData> items;
 
+            public event EventHandler OnPressPlayOnCell;
+
+            public string SelectedCellId { get; set; }
+
             public TableDataSource ( List<WidgetEntryData> items)
             {
                 this.items = items;
@@ -170,6 +216,13 @@ namespace Toggl.Emma
                 var cell = (WidgetCell) tableView.DequeueReusableCell (WidgetCell.WidgetProjectCellId, indexPath);
                 cell.TranslatesAutoresizingMaskIntoConstraints = false;
                 cell.Data = items[ indexPath.Row];
+
+                cell.StartBtnPressed += (sender, e) => {
+                    if ( OnPressPlayOnCell != null) {
+                        SelectedCellId = items[ indexPath.Row].Id;
+                        OnPressPlayOnCell.Invoke ( this, new EventArgs());
+                    }
+                };
                 return cell;
             }
 
@@ -183,6 +236,10 @@ namespace Toggl.Emma
         {
             int maxCellNum = 3;
             nfloat borderMargin = 50;
+
+            public event EventHandler OnPressCell;
+
+            public string SelectedCellId { get; set; }
 
             public override void WillDisplay (UITableView tableView, UITableViewCell cell, NSIndexPath indexPath)
             {
@@ -202,6 +259,16 @@ namespace Toggl.Emma
                     cell.LayoutMargins = UIEdgeInsets.Zero;
                 }
             }
+
+            public override void RowSelected (UITableView tableView, NSIndexPath indexPath)
+            {
+                if ( OnPressCell != null) {
+                    var cell = (WidgetCell)tableView.CellAt ( indexPath);
+                    SelectedCellId = cell.Data.Id;
+                    OnPressCell.Invoke ( this, new EventArgs());
+                }
+            }
+
         }
     }
 }

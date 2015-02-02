@@ -19,17 +19,21 @@ namespace Toggl.Phoebe
 
         private ActiveTimeEntryManager timeEntryManager;
         private TimeEntryModel currentTimeEntry;
-        private IWidgetUpdateService updateService;
+        private AuthManager authManager;
+        private IWidgetUpdateService widgetUpdateService;
         private Subscription<SyncStartedMessage> subscriptionSyncStarted;
         private Subscription<SyncFinishedMessage> subscriptionSyncFinished;
-
 
         private bool isLoading;
         private int rebindCounter;
 
         public WidgetSyncManager ()
         {
-            updateService = ServiceContainer.Resolve<IWidgetUpdateService>();
+            authManager = ServiceContainer.Resolve<AuthManager>();
+            authManager.PropertyChanged += OnAuthPropertyChanged;
+            //widgetUpdateService.SetUserLogged( authManager.IsAuthenticated);
+
+            widgetUpdateService = ServiceContainer.Resolve<IWidgetUpdateService>();
             timeEntryManager = ServiceContainer.Resolve<ActiveTimeEntryManager> ();
             timeEntryManager.PropertyChanged += OnTimeEntryManagerPropertyChanged;
 
@@ -88,13 +92,14 @@ namespace Toggl.Phoebe
                         var l = await q.QueryAsync ().ConfigureAwait (false);
                         project = l.FirstOrDefault();
                     } else {
-                        project = new ProjectData() {
+                        project = new ProjectData {
                             Name = string.Empty,
                             Color = ProjectModel.HexColors.Length - 1,
                         };
                     }
 
-                    widgetEntries.Add ( new WidgetEntryData() {
+                    widgetEntries.Add ( new WidgetEntryData {
+                        Id = entry.Id.ToString(),
                         ProjectName = project.Name,
                         Description = entry.Description,
                         Color = ProjectModel.HexColors [ project.Color % ProjectModel.HexColors.Length],
@@ -104,13 +109,20 @@ namespace Toggl.Phoebe
 
                 }
 
-                updateService.SetLastEntries ( widgetEntries);
+                widgetUpdateService.SetLastEntries ( widgetEntries);
 
             } catch (Exception exc) {
                 var log = ServiceContainer.Resolve<ILogger> ();
                 log.Error (Tag, exc, "Failed to fetch time entries");
             } finally {
                 isLoading = false;
+            }
+        }
+
+        private void OnAuthPropertyChanged (object sender, PropertyChangedEventArgs args)
+        {
+            if ( args.PropertyName == AuthManager.PropertyIsAuthenticated) {
+                widgetUpdateService.SetUserLogged ( authManager.IsAuthenticated);
             }
         }
 
@@ -142,10 +154,10 @@ namespace Toggl.Phoebe
             rebindCounter++;
 
             if (currentTimeEntry == null) {
-                updateService.SetRunningEntryDuration ( DefaultDurationText);
+                widgetUpdateService.SetRunningEntryDuration ( DefaultDurationText);
             } else {
                 var duration = currentTimeEntry.GetDuration ();
-                updateService.SetRunningEntryDuration ( duration.ToString (@"hh\:mm\:ss"));
+                widgetUpdateService.SetRunningEntryDuration ( duration.ToString (@"hh\:mm\:ss"));
 
                 var counter = rebindCounter;
                 var timer = new Timer ( 1000 - duration.Milliseconds);
@@ -160,6 +172,8 @@ namespace Toggl.Phoebe
 
         public class WidgetEntryData
         {
+            public string Id { get; set; }
+
             public string ProjectName { get; set; }
 
             public string Description { get; set; }

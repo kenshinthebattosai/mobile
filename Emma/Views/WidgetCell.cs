@@ -65,7 +65,7 @@ namespace Toggl.Emma.Views
 
         public WidgetCell (IntPtr handle) : base (handle)
         {
-            SelectionStyle = UITableViewCellSelectionStyle.None;
+            SelectionStyle = UITableViewCellSelectionStyle.Gray;
 
             ContentView.Add ( colorBox = new UIView() {
                 TranslatesAutoresizingMaskIntoConstraints = false,
@@ -218,6 +218,8 @@ namespace Toggl.Emma.Views
 
     public class WidgetEntryData
     {
+        public string Id { get; set; }
+
         public string ProjectName { get; set; }
 
         public string Description { get; set; }

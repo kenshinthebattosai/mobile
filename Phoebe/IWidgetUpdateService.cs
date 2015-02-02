@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System;
 
 namespace Toggl.Phoebe
 {
@@ -8,8 +9,10 @@ namespace Toggl.Phoebe
 
         void SetRunningEntryDuration ( string duration);
 
-        long GetEntryIdStarted();
+        void SetUserLogged ( bool isLogged);
 
-        long GetEntryIdStopped();
+        Guid GetEntryIdStarted();
+
+        Guid GetEntryIdViewed();
     }
 }
