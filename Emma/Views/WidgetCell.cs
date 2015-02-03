@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using Cirrious.FluentLayouts.Touch;
 using CoreGraphics;
 using Foundation;
 using UIKit;
-using System.Globalization;
 
 namespace Toggl.Emma.Views
 {
@@ -65,7 +65,7 @@ namespace Toggl.Emma.Views
 
         public WidgetCell (IntPtr handle) : base (handle)
         {
-            SelectionStyle = UITableViewCellSelectionStyle.Gray;
+            SelectionStyle = UITableViewCellSelectionStyle.None;
 
             ContentView.Add ( colorBox = new UIView() {
                 TranslatesAutoresizingMaskIntoConstraints = false,

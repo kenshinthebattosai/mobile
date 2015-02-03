@@ -66,6 +66,15 @@ namespace Toggl.Ross
 
         public override bool OpenUrl (UIApplication application, NSUrl url, string sourceApplication, NSObject annotation)
         {
+            if ( url.AbsoluteString.Contains ( WidgetUpdateService.TodayUrlPrefix)) {
+                var widgetManager = ServiceContainer.Resolve<WidgetSyncManager>();
+                if ( url.AbsoluteString.Contains ( WidgetUpdateService.StartEntryUrlPrefix)) {
+                    widgetManager.StartStopTimeEntry();
+                } else {
+                    widgetManager.ContinueTimeEntry();
+                }
+                return true;
+            }
             return Google.Plus.UrlHandler.HandleUrl (url, sourceApplication, annotation);
         }
 

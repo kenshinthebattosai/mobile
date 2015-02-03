@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using Toggl.Phoebe.Data.Models;
 
 namespace Toggl.Phoebe
 {
@@ -11,8 +12,8 @@ namespace Toggl.Phoebe
 
         void SetUserLogged ( bool isLogged);
 
-        Guid GetEntryIdStarted();
+        void ShowNewTimeEntryScreen ( TimeEntryModel currentTimeEntry);
 
-        Guid GetEntryIdViewed();
+        Guid GetEntryIdStarted();
     }
 }

@@ -4,7 +4,6 @@ using System.Timers;
 using Cirrious.FluentLayouts.Touch;
 using CoreGraphics;
 using Foundation;
-using Newtonsoft.Json;
 using NotificationCenter;
 using Toggl.Emma.Views;
 using UIKit;
@@ -19,6 +18,10 @@ namespace Toggl.Emma
         public static string StartedEntryKey = "started_entry_key";
         public static string ViewedEntryKey = "viewed_entry_key";
         public static string IsUserLoggedKey = "is_logged_key";
+
+        public static string TodayUrlPrefix = "today";
+        public static string StartEntryUrlPrefix = "start";
+        public static string ContinueEntryUrlPrefix = "continue";
 
         private UITableView tableView;
         private UITextView textView;
@@ -112,7 +115,7 @@ namespace Toggl.Emma
 
             var timeEntryJson = UserDefaults.StringForKey ( TimeEntriesKey);
             if ( timeEntryJson != string.Empty) {
-                entries = JsonConvert.DeserializeObject<List<WidgetEntryData>> ( timeEntryJson);
+                entries = Newtonsoft.Json.JsonConvert.DeserializeObject<List<WidgetEntryData>> ( timeEntryJson);
             }
 
             bool isRunning = false;
@@ -138,20 +141,15 @@ namespace Toggl.Emma
             tableView.RegisterClassForCellReuse (typeof (WidgetCell), WidgetCell.WidgetProjectCellId);
 
             var source = new TableDataSource ( entries);
-            var tvdelegate = new TableViewDelegate ();
             tableView.Source = source;
-            tableView.Delegate = tvdelegate;
+            tableView.Delegate = new TableViewDelegate ();
 
-            tvdelegate.OnPressCell += (sender, e) => {
-                var id = string.IsNullOrEmpty ( tvdelegate.SelectedCellId) ? new Guid().ToString() : tvdelegate.SelectedCellId;
-                UserDefaults.SetString ( id, ViewedEntryKey);
-                UIApplication.SharedApplication.OpenUrl (new NSUrl ("com.toggl.timer://"));
-            };
+            source.OnStartStop += (sender, e) => UIApplication.SharedApplication.OpenUrl (new NSUrl ("com.toggl.timer://" + TodayUrlPrefix + "/" + StartEntryUrlPrefix));
 
-            source.OnPressPlayOnCell += (sender, e) => {
+            source.OnContinue += (sender, e) => {
                 var id = string.IsNullOrEmpty ( source.SelectedCellId) ? new Guid().ToString() : source.SelectedCellId;
                 UserDefaults.SetString ( id, StartedEntryKey);
-                UIApplication.SharedApplication.OpenUrl (new NSUrl ("com.toggl.timer://"));
+                UIApplication.SharedApplication.OpenUrl (new NSUrl ("com.toggl.timer://" + TodayUrlPrefix + "/" + ContinueEntryUrlPrefix));
             };
 
             if ( isRunning) {
@@ -202,7 +200,9 @@ namespace Toggl.Emma
         {
             readonly List<WidgetEntryData> items;
 
-            public event EventHandler OnPressPlayOnCell;
+            public event EventHandler OnContinue;
+
+            public event EventHandler OnStartStop;
 
             public string SelectedCellId { get; set; }
 
@@ -218,9 +218,11 @@ namespace Toggl.Emma
                 cell.Data = items[ indexPath.Row];
 
                 cell.StartBtnPressed += (sender, e) => {
-                    if ( OnPressPlayOnCell != null) {
+                    if ( indexPath.Row == 0 && OnStartStop != null) {
+                        OnStartStop.Invoke ( this, new EventArgs());
+                    } else if ( OnContinue != null) {
                         SelectedCellId = items[ indexPath.Row].Id;
-                        OnPressPlayOnCell.Invoke ( this, new EventArgs());
+                        OnContinue.Invoke ( this, new EventArgs());
                     }
                 };
                 return cell;
@@ -236,10 +238,6 @@ namespace Toggl.Emma
         {
             int maxCellNum = 3;
             nfloat borderMargin = 50;
-
-            public event EventHandler OnPressCell;
-
-            public string SelectedCellId { get; set; }
 
             public override void WillDisplay (UITableView tableView, UITableViewCell cell, NSIndexPath indexPath)
             {
@@ -259,16 +257,6 @@ namespace Toggl.Emma
                     cell.LayoutMargins = UIEdgeInsets.Zero;
                 }
             }
-
-            public override void RowSelected (UITableView tableView, NSIndexPath indexPath)
-            {
-                if ( OnPressCell != null) {
-                    var cell = (WidgetCell)tableView.CellAt ( indexPath);
-                    SelectedCellId = cell.Data.Id;
-                    OnPressCell.Invoke ( this, new EventArgs());
-                }
-            }
-
         }
     }
 }

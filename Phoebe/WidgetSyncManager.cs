@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Timers;
+using Toggl.Phoebe.Analytics;
 using Toggl.Phoebe.Data;
 using Toggl.Phoebe.Data.DataObjects;
 using Toggl.Phoebe.Data.Models;
@@ -24,6 +25,7 @@ namespace Toggl.Phoebe
         private Subscription<SyncStartedMessage> subscriptionSyncStarted;
         private Subscription<SyncFinishedMessage> subscriptionSyncFinished;
 
+        private bool isActing;
         private bool isLoading;
         private int rebindCounter;
 
@@ -31,15 +33,77 @@ namespace Toggl.Phoebe
         {
             authManager = ServiceContainer.Resolve<AuthManager>();
             authManager.PropertyChanged += OnAuthPropertyChanged;
-            //widgetUpdateService.SetUserLogged( authManager.IsAuthenticated);
 
             widgetUpdateService = ServiceContainer.Resolve<IWidgetUpdateService>();
             timeEntryManager = ServiceContainer.Resolve<ActiveTimeEntryManager> ();
             timeEntryManager.PropertyChanged += OnTimeEntryManagerPropertyChanged;
+            ResetModelToRunning ();
 
             var bus = ServiceContainer.Resolve<MessageBus> ();
             subscriptionSyncStarted = bus.Subscribe<SyncStartedMessage> (OnSync);
             subscriptionSyncFinished = bus.Subscribe<SyncFinishedMessage> (OnSync);
+        }
+
+        public async void StartStopTimeEntry()
+        {
+            if (isActing) {
+                return;
+            }
+            isActing = true;
+
+            try {
+                if (currentTimeEntry != null && currentTimeEntry.State == TimeEntryState.Running) {
+                    await currentTimeEntry.StopAsync ();
+
+                    // Ping analytics
+                    ServiceContainer.Resolve<ITracker>().SendTimerStopEvent (TimerStopSource.Widget);
+                } else if (timeEntryManager != null) {
+                    currentTimeEntry = (TimeEntryModel)timeEntryManager.Draft;
+                    if (currentTimeEntry == null) {
+                        return;
+                    }
+                    await currentTimeEntry.StartAsync ();
+
+                    // Show new screen on platform
+                    widgetUpdateService.ShowNewTimeEntryScreen (currentTimeEntry);
+
+                    // Ping analytics
+                    ServiceContainer.Resolve<ITracker>().SendTimerStartEvent (TimerStartSource.WidgetNew);
+                }
+            } finally {
+                isActing = false;
+            }
+        }
+
+        public async void ContinueTimeEntry ()
+        {
+            TimeEntryModel entryModel;
+            Guid stringGuid = widgetUpdateService.GetEntryIdStarted();
+
+            // Query local data:
+            var store = ServiceContainer.Resolve<IDataStore> ();
+            var userId = ServiceContainer.Resolve<AuthManager> ().GetUserId ();
+
+            var baseQuery = store.Table<TimeEntryData> ()
+                            .Where (r => r.DeletedAt == null
+                                    && r.UserId == userId
+                                    && r.Id == stringGuid)
+                            .Take ( 1);
+
+            var entries = await baseQuery.QueryAsync ().ConfigureAwait (false);
+            if ( entries.Count > 0) {
+                entryModel = (TimeEntryModel)entries.FirstOrDefault();
+            } else {
+                return;
+            }
+
+            if (entryModel == null) {
+                return;
+            }
+            await entryModel.ContinueAsync ();
+
+            // Ping analytics
+            ServiceContainer.Resolve<ITracker>().SendTimerStartEvent (TimerStartSource.WidgetStart);
         }
 
         public void Dispose ()
