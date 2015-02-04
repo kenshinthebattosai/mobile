@@ -23,9 +23,6 @@ namespace Toggl.Emma
         public static string StartEntryUrlPrefix = "start";
         public static string ContinueEntryUrlPrefix = "continue";
 
-        private UITableView tableView;
-        private UITextView textView;
-        private Timer timer;
         private NSUserDefaults nsUserDefaults;
 
         public NSUserDefaults UserDefaults
@@ -38,7 +35,9 @@ namespace Toggl.Emma
             }
         }
 
-        public Timer UpdateTimer
+        private Timer timer;
+
+        public Timer Timer
         {
             get {
                 if (timer == null)
@@ -49,9 +48,12 @@ namespace Toggl.Emma
             }
         }
 
+        private UITableView tableView;
+        private UITextView textView;
         private nfloat cellHeight = 60;
         private nfloat height = 250; // 4 x 60f(cells),
         private nfloat marginTop = 10;
+        private bool isRunning;
 
         public override void LoadView ()
         {
@@ -102,6 +104,38 @@ namespace Toggl.Emma
         {
             base.ViewDidLoad ();
 
+            UpdateContent();
+
+            UpdateTimeValue ();
+
+            if ( isRunning) {
+                // Start to check time
+                Timer.Elapsed += ( sender, e) => InvokeOnMainThread (UpdateTimeValue);
+                Timer.Start();
+            }
+        }
+
+        public override void ViewDidUnload ()
+        {
+            Timer.Stop ();
+            base.ViewDidUnload ();
+        }
+
+        private void UpdateTimeValue()
+        {
+            // Periodically update content from UserDefaults
+            var timeValue = UserDefaults.StringForKey ( MillisecondsKey);
+
+            if ( !string.IsNullOrEmpty ( timeValue)) {
+                var cell = ( WidgetCell)tableView.CellAt ( NSIndexPath.FromRowSection ( 0, 0));
+                if ( cell != null) {
+                    cell.TimeValue = UserDefaults.StringForKey ( MillisecondsKey);
+                }
+            }
+        }
+
+        private void UpdateContent()
+        {
             // Check if user is logged
             var isLogged = UserDefaults.BoolForKey ( IsUserLoggedKey);
             if ( !isLogged) {
@@ -110,6 +144,8 @@ namespace Toggl.Emma
                 return;
             }
 
+            isRunning = false;
+
             // Get saved entries
             var entries = new List<WidgetEntryData>();
 
@@ -117,8 +153,6 @@ namespace Toggl.Emma
             if ( timeEntryJson != string.Empty) {
                 entries = Newtonsoft.Json.JsonConvert.DeserializeObject<List<WidgetEntryData>> ( timeEntryJson);
             }
-
-            bool isRunning = false;
 
             if ( entries.Count > 0) {
 
@@ -138,11 +172,7 @@ namespace Toggl.Emma
                 entries.Add ( new WidgetEntryData { IsEmpty = true });
             }
 
-            tableView.RegisterClassForCellReuse (typeof (WidgetCell), WidgetCell.WidgetProjectCellId);
-
             var source = new TableDataSource ( entries);
-            tableView.Source = source;
-            tableView.Delegate = new TableViewDelegate ();
 
             source.OnStartStop += (sender, e) => UIApplication.SharedApplication.OpenUrl (new NSUrl ("com.toggl.timer://" + TodayUrlPrefix + "/" + StartEntryUrlPrefix));
 
@@ -152,38 +182,16 @@ namespace Toggl.Emma
                 UIApplication.SharedApplication.OpenUrl (new NSUrl ("com.toggl.timer://" + TodayUrlPrefix + "/" + ContinueEntryUrlPrefix));
             };
 
-            if ( isRunning) {
-                // Start to check time
-                UpdateTimer.Elapsed += ( sender, e) => InvokeOnMainThread (UpdateContent);
-                UpdateTimer.Start();
-            }
-
-            UpdateContent ();
-        }
-
-        public override void ViewDidUnload ()
-        {
-            UpdateTimer.Stop ();
-            base.ViewDidUnload ();
-        }
-
-        private void UpdateContent()
-        {
-            // Periodically update content from UserDefaults
-            var timeValue = UserDefaults.StringForKey ( MillisecondsKey);
-
-            if ( !string.IsNullOrEmpty ( timeValue)) {
-                var cell = ( WidgetCell)tableView.CellAt ( NSIndexPath.FromRowSection ( 0, 0));
-                if ( cell != null) {
-                    cell.TimeValue = UserDefaults.StringForKey ( MillisecondsKey);
-                }
-            }
+            tableView.RegisterClassForCellReuse (typeof (WidgetCell), WidgetCell.WidgetProjectCellId);
+            tableView.Source = source;
+            tableView.Delegate = new TableViewDelegate ();
         }
 
         [Export ("widgetPerformUpdateWithCompletionHandler:")]
         public void WidgetPerformUpdate (Action<NCUpdateResult> completionHandler)
         {
-            UpdateContent ();
+            UpdateContent();
+            UpdateTimeValue ();
             completionHandler (NCUpdateResult.NewData);
         }
 

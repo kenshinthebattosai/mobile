@@ -15,4 +15,3 @@ local.properties
 *.suo
 packages
 Resource.designer.cs
-DummyContainer

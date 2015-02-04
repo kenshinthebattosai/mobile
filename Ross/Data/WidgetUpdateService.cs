@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Foundation;
 using Newtonsoft.Json;
+using NotificationCenter;
 using Toggl.Phoebe;
 using Toggl.Phoebe.Data.Models;
 using Toggl.Phoebe.Net;
@@ -55,6 +56,7 @@ namespace Toggl.Ross.Data
             if ( lastEntries != null) {
                 var json = JsonConvert.SerializeObject ( lastEntries);
                 UserDefaults.SetString ( json, TimeEntriesKey);
+                UpdateWidgetContent();
             }
         }
 
@@ -66,6 +68,7 @@ namespace Toggl.Ross.Data
         public void SetUserLogged (bool isLogged)
         {
             UserDefaults.SetBool ( isLogged, IsUserLoggedKey);
+            UpdateWidgetContent();
         }
 
         public void ShowNewTimeEntryScreen ( TimeEntryModel currentTimeEntry)
@@ -88,6 +91,13 @@ namespace Toggl.Ross.Data
             Guid.TryParse (UserDefaults.StringForKey (StartedEntryKey), out entryId);
             return entryId;
         }
+
+        public void UpdateWidgetContent()
+        {
+            var controller = NCWidgetController.GetWidgetController ();
+            controller.SetHasContent (true, "com.toggl.timer.today");
+        }
+
         #endregion
     }
 }
