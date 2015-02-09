@@ -48,16 +48,23 @@ namespace Toggl.Emma
             }
         }
 
+        private StartStopBtn openAppBtn;
+        private UIView openAppView;
         private UITableView tableView;
-        private UITextView textView;
+
         private nfloat cellHeight = 60;
-        private nfloat height = 250; // 4 x 60f(cells),
-        private nfloat marginTop = 10;
+        private nfloat height;
+        private nfloat marginTop;
         private bool isRunning;
+        private bool isLogged;
 
         public override void LoadView ()
         {
             base.LoadView ();
+
+            isLogged = UserDefaults.BoolForKey ( IsUserLoggedKey);
+            marginTop = (isLogged) ? 10f : 1f;
+            height = (isLogged) ? 250f : 70f; // 4 x 60f(cells),
 
             var v = new UIView {
                 BackgroundColor = UIColor.Clear,
@@ -72,27 +79,62 @@ namespace Toggl.Emma
                 RowHeight = cellHeight,
             });
 
-            v.Add (textView = new UITextView {
+            v.Add (openAppView = new UIView {
                 TranslatesAutoresizingMaskIntoConstraints = false,
-                Font = UIFont.FromName ( "Helvetica", 14f),
-                Text = "NoLoggedUser".Tr(),
-                TextColor = UIColor.White,
-                TextAlignment = UITextAlignment.Center,
-                BackgroundColor = UIColor.Clear,
                 Hidden = true,
             });
+
+            UIView bg;
+            openAppView.Add (bg = new UIView {
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                BackgroundColor = UIColor.Black,
+                Alpha = 0.1f,
+            });
+
+            UILabel textView;
+            openAppView.Add (textView = new UILabel {
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                Font = UIFont.FromName ( "Helvetica", 13f),
+                Text = "NoLoggedUser".Tr(),
+                TextColor = UIColor.White,
+                BackgroundColor = UIColor.Clear,
+            });
+
+            openAppView.Add (openAppBtn = new StartStopBtn {
+                TranslatesAutoresizingMaskIntoConstraints = false,
+                IsActive = true,
+            });
+
+            openAppView.AddConstraints (
+
+                bg.AtTopOf ( openAppView),
+                bg.AtLeftOf ( openAppView),
+                bg.AtRightOf ( openAppView),
+                bg.AtBottomOf ( openAppView),
+
+                textView.WithSameCenterY (openAppView),
+                textView.AtLeftOf ( openAppView, 50f),
+                textView.WithSameHeight ( openAppView),
+                textView.AtRightOf ( openAppView),
+
+                openAppBtn.Width().EqualTo ( 35f),
+                openAppBtn.Height().EqualTo ( 35f),
+                openAppBtn.AtRightOf (openAppView, 15f),
+                openAppBtn.WithSameCenterY ( openAppView),
+
+                null
+            );
 
             v.AddConstraints (
 
                 tableView.AtTopOf (v),
-                tableView.WithSameWidth ( v),
+                tableView.WithSameWidth (v),
                 tableView.Height().EqualTo ( height - marginTop).SetPriority ( UILayoutPriority.DefaultLow),
-                tableView.AtBottomOf ( v),
+                tableView.AtBottomOf (v),
 
-                textView.WithSameCenterX ( v),
-                textView.WithSameCenterY ( v),
-                textView.WithSameWidth ( v),
-                textView.Height().EqualTo ( cellHeight),
+                openAppView.AtTopOf (v),
+                openAppView.WithSameWidth (v),
+                openAppView.Height().EqualTo ( cellHeight),
 
                 null
             );
@@ -103,6 +145,11 @@ namespace Toggl.Emma
         public override void ViewDidLoad ()
         {
             base.ViewDidLoad ();
+
+            openAppBtn.TouchUpInside += (sender, e) => {
+                openAppBtn.IsActive = false;
+                UIApplication.SharedApplication.OpenUrl (new NSUrl ("com.toggl.timer://" + TodayUrlPrefix + "/"));
+            };
 
             UpdateContent();
 
@@ -137,10 +184,9 @@ namespace Toggl.Emma
         private void UpdateContent()
         {
             // Check if user is logged
-            var isLogged = UserDefaults.BoolForKey ( IsUserLoggedKey);
             if ( !isLogged) {
                 tableView.Hidden = true;
-                textView.Hidden = false;
+                openAppView.Hidden = false;
                 return;
             }
 
